@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+               xmlns:s="library://ns.adobe.com/flex/spark" 
+               xmlns:mx="library://ns.adobe.com/flex/mx" 
+               minWidth="955" minHeight="600" initialize="init()">
+    <mx:VideoDisplay id="_videoDisplay" width="320" height="240"/>
+    <fx:Script>
+        <![CDATA[
+            import flash.utils.setInterval;
+            import flash.utils.setTimeout;
+            private function init() : void {
+                trace('connecting');
+                var nc : NetConnection = new NetConnection();
+                nc.addEventListener(NetStatusEvent.NET_STATUS, 
+                    function(event : NetStatusEvent) : void {
+                        trace('net status: ' + event.info.code);
+                        if (event.info.code == "NetConnection.Connect.Success")
+                            connectSuccess(nc);
+                    });
+                nc.connect("rtmfp://p2p.rtmfp.net/DEV_KEY_HERE/");
+            }
+            private function connectSuccess(nc : NetConnection) : void {
+                var groupSpec : GroupSpecifier = new GroupSpecifier("newgroup");
+                groupSpec.serverChannelEnabled = true;
+                groupSpec.multicastEnabled = true;
+                var stream : NetStream = new NetStream(
+                    nc, groupSpec.groupspecWithAuthorizations());
+                stream.addEventListener(NetStatusEvent.NET_STATUS,
+                    streamHandler);
+                stream.multicastWindowDuration = 0.1;
+                setTimeout(function() : void { subscribe(stream); }, 5000);
+            }
+            private function streamHandler(event : NetStatusEvent) : void {
+                trace(event.info.code);
+            }
+            private function subscribe(stream : NetStream) : void {
+                stream.play("newuser");
+                var video : Video = new Video();
+                video.width = 320;
+                video.height = 240;
+                _videoDisplay.addChild(video);
+                video.attachNetStream(stream);
+            }
+        ]]>
+    </fx:Script>
+</s:Application>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+               xmlns:s="library://ns.adobe.com/flex/spark" 
+               xmlns:mx="library://ns.adobe.com/flex/mx" 
+               minWidth="955" minHeight="600" initialize="init()">
+    <mx:VideoDisplay id="_localVideoDisplay" width="320" height="240"/>
+    <fx:Script>
+        <![CDATA[
+            private var _netStream : NetStream;
+            
+            private function init() : void {
+                var nc : NetConnection = new NetConnection();
+                nc.addEventListener(NetStatusEvent.NET_STATUS, 
+                    function(event : NetStatusEvent) : void {
+                        trace('net status: ' + event.info.code);
+                        if (event.info.code == "NetConnection.Connect.Success")
+                            connectSuccess(nc);
+                        if (event.info.code == "NetStream.Connect.Success") {
+                            trace('going to publish from conn');
+                            
+                            _netStream.publish("speeddater");
+                        }
+                    });
+                nc.connect("rtmp://fms.8planes.com/grouprecpub");
+            }
+            private function connectSuccess(nc : NetConnection) : void {
+                trace('connecting netstream');
+                
+                _netStream = new NetStream(nc);
+                _netStream.addEventListener(
+                    NetStatusEvent.NET_STATUS, streamHandler);
+                var camera : Camera = Camera.getCamera();
+                if (camera) {
+                    _localVideoDisplay.attachCamera(camera);
+                    _netStream.attachCamera(camera);
+                }
+                var mic : Microphone = Microphone.getMicrophone();
+                if (mic)
+                    _netStream.attachAudio(mic);
+                _netStream.publish("speeddater");
+            }
+            private function streamHandler(ns : NetStatusEvent) : void {
+                trace("outgoing stream event: " + ns.info.code);
+            }
+        ]]>
+    </fx:Script>
+</s:Application>
