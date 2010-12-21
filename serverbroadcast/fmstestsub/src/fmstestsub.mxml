@@ -17,7 +17,7 @@
                         if (event.info.code == "NetConnection.Connect.Success")
                             connectSuccess(nc);
                     });
-                nc.connect("rtmfp://p2p.rtmfp.net/DEV_KEY_HERE/");
+                nc.connect("rtmfp://p2p.rtmfp.net/CIRRUS_DEV_KEY/");
             }
             private function connectSuccess(nc : NetConnection) : void {
                 var groupSpec : GroupSpecifier = new GroupSpecifier("newgroup");

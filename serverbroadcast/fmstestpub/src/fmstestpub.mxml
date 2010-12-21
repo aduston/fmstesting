@@ -21,7 +21,7 @@
                             _netStream.publish("speeddater");
                         }
                     });
-                nc.connect("rtmp://fms.8planes.com/grouprecpub");
+                nc.connect("rtmp://FMS_SERVER_APP_URL");
             }
             private function connectSuccess(nc : NetConnection) : void {
                 trace('connecting netstream');

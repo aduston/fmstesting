@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   minWidth="955" minHeight="600" initialize="init()">
+	<mx:VideoDisplay id="_localVideoDisplay" width="320" height="240"/>
+	<fx:Script>
+		<![CDATA[
+			private var _pubNC : NetConnection;
+			private var _recordNC : NetConnection;
+			private var _pubNS : NetStream;
+			private var _recordNS : NetStream;
+			
+			private function init() : void {
+				_pubNC = new NetConnection();
+				_pubNC.addEventListener(
+					NetStatusEvent.NET_STATUS,
+					function(event : NetStatusEvent) : void {
+						trace('pub net status: ' + event.info.code);
+						if (event.info.code == "NetConnection.Connect.Success")
+							connectSuccess();
+						if (event.info.code == "NetStream.Connect.Success") {
+							attachCamAndMic(_pubNS, true);
+							_pubNS.publish("newuser");
+						}
+					});
+				_pubNC.connect("rtmfp://p2p.rtmfp.net/CIRRUS_DEV_KEY/");
+				
+				_recordNC = new NetConnection();
+				_recordNC.addEventListener(NetStatusEvent.NET_STATUS,
+					function(event : NetStatusEvent) : void {
+						trace('record net status: ' + event.info.code);
+						if (event.info.code == "NetConnection.Connect.Success")
+							startRecording();
+					});
+				_recordNC.connect("rtmp://FMS_SERVER_APP_URL");
+			}
+			private function connectSuccess() : void {
+				var groupSpec : GroupSpecifier = new GroupSpecifier("newgroup");
+				groupSpec.serverChannelEnabled = true;
+				groupSpec.multicastEnabled = true;
+				_pubNS = new NetStream(
+					_pubNC, groupSpec.groupspecWithAuthorizations());
+				_pubNS.addEventListener(NetStatusEvent.NET_STATUS,
+					streamHandler);
+			}
+			private function startRecording() : void {
+				_recordNS = new NetStream(_recordNC);
+				_recordNS.addEventListener(NetStatusEvent.NET_STATUS,
+					streamHandler);
+				attachCamAndMic(_recordNS);
+				_recordNS.publish("recordedstream", "record");
+			}
+			private function streamHandler(event : NetStatusEvent) : void {
+				trace(event.info.code);
+			}
+			private function attachCamAndMic(netStream : NetStream, attachToVideoDisplay : Boolean = false) : void {
+				var camera : Camera = Camera.getCamera();
+				if (camera) {
+					if (attachToVideoDisplay)
+						_localVideoDisplay.attachCamera(camera);
+					netStream.attachCamera(camera);
+				}
+				var mic : Microphone = Microphone.getMicrophone();
+				if (mic)
+					netStream.attachAudio(mic);
+			}
+		]]>
+	</fx:Script>
+</s:Application>
